@@ -1,0 +1,32 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model Clinic {
+  id        String     @default(uuid()) @id
+  name          String?
+  email         String?   @unique
+  patients        Patient[]
+}
+
+model Patient {
+  id            String       @default(uuid()) @id
+  firstName  String
+  middleName String?
+  lastName   String
+  addresses    String[]
+  birthDate  DateTime  @default(now()) @db.Date
+  status     String
+  extendedData Json?
+
+  clinic    Clinic?   @relation(fields: [clinicId], references: [id])
+  clinicId  String?
+}
