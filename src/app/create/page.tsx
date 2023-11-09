@@ -1,4 +1,6 @@
+// this should not be necessary but there is a known bug: https://github.com/vercel/next.js/issues/49232
 "use client";
+
 import { createPatient } from "../actions";
 
 import { useFormState, useFormStatus } from "react-dom";

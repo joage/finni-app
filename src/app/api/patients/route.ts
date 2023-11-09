@@ -16,6 +16,7 @@ export async function GET(request: Request): Promise<Response> {
             { lastName: { equals: keyword, mode: Prisma.QueryMode.insensitive} },
             { addresses: { has: keyword}},
             { status: { equals: keyword, mode: Prisma.QueryMode.insensitive } },
+            // todo: implement search by extended data fields. Need to convert to raw SQL query
         ],
       } : undefined;
 
@@ -39,19 +40,6 @@ export async function GET(request: Request): Promise<Response> {
             ...(birthDateWhereClause ? [birthDateWhereClause]: []),
         ]}
     });
-
-
-    // const whereClause = keyword ? '' : `WHERE 
-    //   (LOWER("firstName") = LOWER(${keyword}) OR
-    //    LOWER("middleName") = LOWER(${keyword}) OR
-    //    LOWER("lastName") = LOWER(${keyword}) OR
-    //    ${keyword} = ANY("addresses") OR
-    //    LOWER("status") = LOWER(${keyword}));`
-
-    // const patients = await prisma.$executeRaw` 
-    //     SELECT *
-    //     FROM Patient
-    // `;
 
     return new Response(JSON.stringify(patients), { status: 200 });
 }
