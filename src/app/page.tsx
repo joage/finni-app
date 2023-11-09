@@ -1,54 +1,59 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import type { Patient } from "@prisma/client";
-import { headers } from "next/headers";
 
-async function getPatients(): Promise<Patient[]> {
-  // for dev purposes
-  const host = headers().get("host");
-  const protocol = process?.env.NODE_ENV === "development" ? "http" : "https";
+import PatientList from "./_components/patientList";
+import BirthDateFilter from "./_components/birthDateFilter";
+import StatusFilter from "./_components/statusFilter";
+import KeywordSearch from "./_components/keywordSearch";
 
-  const res = await fetch(`${protocol}://${host}/api/patients`);
-  const patients = await res.json();
+export default function Home() {
+  const [keyword, setKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [birthDateFilter, setBirthDateFilter] = useState("");
 
-  return patients;
-}
+  const [isLoading, setIsLoading] = useState(true);
+  const [patients, setPatients] = useState<Patient[]>([]);
 
-export default async function Home() {
-  const patients = await getPatients();
+  useEffect(() => {
+    setIsLoading(true);
+    fetch(
+      "api/patients?" +
+        new URLSearchParams({
+          keyword,
+          statusFilter,
+          birthDateFilter,
+        })
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        setPatients(data);
+        setIsLoading(false);
+      });
+  }, [keyword, statusFilter, birthDateFilter]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center p-24 gap-4">
-      <h1 className="font-bold">Patients</h1>
-      <table className="w-full text-sm text-left border">
-        <thead className="text-xs">
-          <tr>
-            <th className="border px-8 py-4">First Name</th>
-            <th className="border px-8 py-4">Middle Name</th>
-            <th className="border px-8 py-4">Last Name</th>
-            <th className="border px-8 py-4">Addresses</th>
-            <th className="border px-8 py-4">Status</th>
-            <th className="border px-8 py-4">DOB</th>
-          </tr>
-        </thead>
-        <tbody>
-          {patients.map((patient) => (
-            <tr className="border" key={patient.id}>
-              <td className="border px-8 py-4">{patient.firstName}</td>
-              <td className="border px-8 py-4">{patient.middleName}</td>
-              <td className="border px-8 py-4">{patient.lastName}</td>
-              <td className="border px-8 py-4">
-                <ul className="list-disc">
-                  {patient.addresses.map((address, index) => (
-                    <li key={index}>{address}</li>
-                  ))}
-                </ul>
-              </td>
-              <td className="border px-8 py-4">{patient.status}</td>
-              <td className="border px-8 py-4">
-                {new Date(patient.birthDate).toISOString().substring(0, 10)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <main className="flex min-h-screen flex-col p-24 gap-4">
+      <Link
+        className="mr-auto rounded-md font-bold bg-blue-300 hover:bg-blue-400 p-3"
+        href="/create"
+      >
+        + Add New
+      </Link>
+      <div className="flex flex-row items-end justify-between">
+        <div className="flex flex-col gap-2">
+          <KeywordSearch setKeyword={setKeyword} />
+        </div>
+        <h1 className="font-bold text-xl">Patients</h1>
+        <div className="flex flex-col gap-2">
+          <StatusFilter setStatusFilter={setStatusFilter} />
+          <BirthDateFilter setBirthDateFilter={setBirthDateFilter} />
+        </div>
+      </div>
+
+      {isLoading ? "Loading patients..." : <PatientList patients={patients} />}
     </main>
   );
 }
